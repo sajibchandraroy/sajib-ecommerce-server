@@ -220,9 +220,9 @@ let orders ;
     post_body['total_amount'] = data.amount;
     post_body['currency'] = "BDT";
     post_body['tran_id'] = "12345";
-    post_body['success_url'] = "http://localhost:5000/success";
+    post_body['success_url'] = "https://guarded-bastion-31565.herokuapp.com/success";
     post_body['fail_url'] = "your fail url";
-    post_body['cancel_url'] = "http://localhost:5000/cancel";
+    post_body['cancel_url'] = "https://guarded-bastion-31565.herokuapp.com/cancel";
     post_body['emi_option'] = 0;
     post_body['cus_name'] = data.name;
     post_body['cus_email'] = data.email;
@@ -264,7 +264,7 @@ let orders ;
         // console.log(result.insertedCount > 0)
         if(result.insertedCount > 0){
           orders = null;
-          res.redirect("http://localhost:3000/success")
+          res.redirect("https://dailyneeds-6ea60.web.app/success")
         }
         
       })
