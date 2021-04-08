@@ -7,6 +7,15 @@ const admin = require('firebase-admin');
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectId;
 
+const SSLCommerz = require('sslcommerz-nodejs');
+
+let settings = {
+  isSandboxMode: true, //false if live version
+  store_id: "devel60562f6a15795",
+  store_passwd: "devel60562f6a15795@ssl"
+}
+let sslcommerz = new SSLCommerz(settings);
+
 
 
 
@@ -18,16 +27,16 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 const app = express()
 
-app.use(bodyParser.json());
-
+// app.use(bodyParser.json());
 app.use(cors());
-
 app.use(fileUpload());
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 var serviceAccount = require("./configs/dailyneeds-6ea60-firebase-adminsdk-xu8oq-a0a4b9fb72.json");
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),    
+  credential: admin.credential.cert(serviceAccount),
 });
 const port = 5000;
 
@@ -50,15 +59,15 @@ client.connect(err => {
   const adminCollection = client.db("dailyNeeds").collection("admin");
   console.log('database connected')
 
-  app.post('/addProducts', (req, res) => {    
+  app.post('/addProducts', (req, res) => {
     const key = req.body.key;
     const name = req.body.name;
     const category = req.body.category;
     const subCategory = req.body.subCategory;
-    const price = req.body.price;   
+    const price = req.body.price;
     const brand = req.body.brandName;
     const description = req.body.description;
-    
+
     const file = req.files.file;
     const newImg = file.data;
     const encImg = newImg.toString('base64');
@@ -99,23 +108,23 @@ client.connect(err => {
 
   app.delete('/deleteproduct/:id', (req, res) => {
     const id = ObjectId(req.params.id);
-    console.log('delete this', id);
-    productsCollection.findOneAndDelete({_id: id})
-    .then(documents => res.send(!!documents.value))
-})
+    // console.log('delete this', id);
+    productsCollection.findOneAndDelete({ _id: id })
+      .then(documents => res.send(!!documents.value))
+  })
 
-app.delete('/admindelete/:id', (req, res) => {
+  app.delete('/admindelete/:id', (req, res) => {
     const id = ObjectId(req.params.id);
-    console.log('delete this', id);
-    adminCollection.findOneAndDelete({_id: id})
-    .then(documents => res.send(!!documents.value))
-})
+    // console.log('delete this', id);
+    adminCollection.findOneAndDelete({ _id: id })
+      .then(documents => res.send(!!documents.value))
+  })
 
 
 
   app.post('/addAdmin', (req, res) => {
     const admin = req.body;
-    console.log(admin)
+    // console.log(admin)
     adminCollection.insertOne(admin)
       .then(result => {
         res.send(result.insertedCount > 0);
@@ -126,18 +135,18 @@ app.delete('/admindelete/:id', (req, res) => {
     const email = req.body.email;
     adminCollection.find({ email: email })
       .toArray((err, admin) => {
-        if(err){
+        if (err) {
           console.log(err)
         }
-        else{
+        else {
           res.send(admin.length > 0);
-        }        
+        }
       })
   })
 
   app.patch('/update/:id', (req, res) => {
-    console.log(req.body)
-    console.log(req.params.id)
+    // console.log(req.body)
+    // console.log(req.params.id)
     productsCollection.updateOne({ _id: ObjectId(req.params.id) },
       {
         $set: { price: req.body.newPrice }
@@ -149,7 +158,7 @@ app.delete('/admindelete/:id', (req, res) => {
 
   app.get('/orders', (req, res) => {
     const bearer = req.headers.authorization;
-    console.log(bearer);
+    // console.log(bearer);
     ordersCollection.find({})
       .toArray((err, documents) => {
         res.send(documents);
@@ -161,7 +170,7 @@ app.delete('/admindelete/:id', (req, res) => {
     console.log(order)
     ordersCollection.insertOne(order)
       .then(result => {
-        console.log(result.insertedCount > 0)
+        // console.log(result.insertedCount > 0)
         res.send(result.insertedCount > 0);
       })
   })
@@ -169,44 +178,98 @@ app.delete('/admindelete/:id', (req, res) => {
   app.patch("/updateOrder/:id", (req, res) => {
     console.log(req.params.id)
     ordersCollection.updateOne(
-        { _id: ObjectId(req.params.id) },
-        {
-            $set: { status: req.body.status }
-        })
-        .then(result => {
-            res.send(result.modifiedCount > 0);
-        })
-})
+      { _id: ObjectId(req.params.id) },
+      {
+        $set: { status: req.body.status }
+      })
+      .then(result => {
+        res.send(result.modifiedCount > 0);
+      })
+  })
 
-app.get('/customerOrders', (req, res) => {
+  app.get('/customerOrders', (req, res) => {
     const bearer = req.headers.authorization;
     // const queryEmail = req.query.email;
     // console.log(bearer, queryEmail)
     if (bearer && bearer.startsWith('Bearer ')) {
-        const idToken = bearer.split(' ')[1];
-        admin.auth().verifyIdToken(idToken)
-            .then(function (decodedToken) {
-                const tokenEmail = decodedToken.email;
-                const queryEmail = req.query.email;
-                if (tokenEmail == queryEmail) {
-                    ordersCollection.find({ email: queryEmail })
-                        .toArray((err, documents) => {
-                            res.status(200).send(documents);
-                        })
-                }
-            }).catch(function (error) {
-                res.status(401).send('Un authorized access')
-            });
+      const idToken = bearer.split(' ')[1];
+      admin.auth().verifyIdToken(idToken)
+        .then(function (decodedToken) {
+          const tokenEmail = decodedToken.email;
+          const queryEmail = req.query.email;
+          if (tokenEmail == queryEmail) {
+            ordersCollection.find({ email: queryEmail })
+              .toArray((err, documents) => {
+                res.status(200).send(documents);
+              })
+          }
+        }).catch(function (error) {
+          res.status(401).send('Un authorized access')
+        });
     }
     else {
-        res.status(401).send('Un authorized access')
+      res.status(401).send('Un authorized access')
     }
-})
+  })
+
+let orders ;
+  app.post('/pay', (req, res) => {
+    const data = req.body
+    orders = data;    
+    let post_body = {};
+    post_body['total_amount'] = data.amount;
+    post_body['currency'] = "BDT";
+    post_body['tran_id'] = "12345";
+    post_body['success_url'] = "http://localhost:5000/success";
+    post_body['fail_url'] = "your fail url";
+    post_body['cancel_url'] = "http://localhost:5000/cancel";
+    post_body['emi_option'] = 0;
+    post_body['cus_name'] = data.name;
+    post_body['cus_email'] = data.email;
+    post_body['cus_phone'] = data.shipment.phone;
+    post_body['cus_add1'] = data.shipment.address;
+    post_body['cus_city'] = "";
+    post_body['cus_country'] = "Bangladesh";
+    post_body['shipping_method'] = "NO";
+    post_body['multi_card_name'] = ""
+    post_body['num_of_item'] = '';
+    post_body['product_name'] = "Test";
+    post_body['product_category'] = "Test Category";
+    post_body['product_profile'] = data.products;
+
+    // console.log(post_body)
 
 
-  
+    sslcommerz.init_transaction(post_body)
+      .then(response => {
+        res.send(response)
+      })
+      .catch(error => {
+        console.log(error);
+      })    
+  })
 
 
+  app.post('/success', (req, res) => {
+    const val_id = req.body.val_id;
+    const card_type = req.body.card_type;
+    const bank_tran_id = req.body.bank_tran_id;
+    const tran_date = req.body.tran_date;
+    const card_no = req.body.card_no;
+    // console.log(bank_tran_id, tran_date, val_id, card_type, card_no)    
+    orders['paymentId'] = bank_tran_id
+    // console.log(orders)
+    ordersCollection.insertOne(orders)
+      .then(result => {
+        // console.log(result.insertedCount > 0)
+        if(result.insertedCount > 0){
+          orders = null;
+          res.redirect("http://localhost:3000/success")
+        }
+        
+      })
+    
+  })
 });
 
 app.listen(process.env.PORT || port)

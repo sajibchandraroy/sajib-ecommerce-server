@@ -17,7 +17,8 @@
     "express": "^4.17.1",
     "express-fileupload": "^1.2.1",
     "firebase-admin": "^9.6.0",
-    "mongodb": "^3.6.5"
+    "mongodb": "^3.6.5",
+    "sslcommerz-nodejs": "^1.0.8"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
