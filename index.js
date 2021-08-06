@@ -268,7 +268,7 @@ let orders ;
         // console.log(result.insertedCount > 0)
         if(result.insertedCount > 0){
           orders = null;
-          res.redirect("https://dailyneeds-6ea60.web.app/success")
+          res.redirect("https://dailyneeds-6ea6o.web.app/success")
         }
         
       })
