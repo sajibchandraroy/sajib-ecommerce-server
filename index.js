@@ -33,7 +33,7 @@ app.use(fileUpload());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-var serviceAccount = require("./configs/dailyneeds-6ea60-firebase-adminsdk-xu8oq-a0a4b9fb72.json");
+var serviceAccount = require("./configs/dailyneeds-6ea6o-firebase-adminsdk-a8g8d-04027dad61.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -43,6 +43,10 @@ const port = 5000;
 app.get('/', (req, res) => {
   res.send('Hello World! Daily Needs Sajib')
 })
+
+app.post('/userDelete', (req, res) => {
+    console.log(req.body)
+  })
 
 
 
@@ -91,6 +95,8 @@ client.connect(err => {
       })
 
   })
+
+  
 
   app.get('/products', (req, res) => {
     productsCollection.find({})
@@ -144,14 +150,12 @@ client.connect(err => {
       })
   })
 
-  app.patch('/update/:id', (req, res) => {
-    // console.log(req.body)
-    // console.log(req.params.id)
+  app.patch('/update/:id', (req, res) => {    
     productsCollection.updateOne({ _id: ObjectId(req.params.id) },
       {
         $set: { price: req.body.newPrice }
       })
-      .then(result => {
+      .then(result => {        
         res.send(result.modifiedCount > 0)
       })
   })
